@@ -1,0 +1,26 @@
+{
+	"unit_id": "01",
+	"title": "Introdução - Frases Básicas",
+	"exercises": [
+		{
+			"exercise_id": "01",
+			"type": "translation",
+			"prompt_pt": "Eu bebo água.",
+			"expected": "I drink water.",
+			"acceptable_variations": ["I'm drinking water."],
+			"extensions": ["Ele bebe água.", "Nós bebemos água."],
+			"correction_strategy": "pyramid",
+			"feedback_pt": "Muito bem! Agora tente a próxima."
+		},
+		{
+			"exercise_id": "02",
+			"type": "translation",
+			"prompt_pt": "Eu gosto de café.",
+			"expected": "I like coffee.",
+			"acceptable_variations": ["I enjoy coffee."],
+			"extensions": ["Ela gosta de café.", "Eles gostam de café."],
+			"correction_strategy": "pyramid",
+			"feedback_pt": "Excelente! Vamos continuar."
+		}
+	]
+}

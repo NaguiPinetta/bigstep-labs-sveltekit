@@ -1,64 +1,68 @@
 <script lang="ts" module>
-	import AudioWaveform from "lucide-svelte/icons/audio-waveform";
-	import BookOpen from "lucide-svelte/icons/book-open";
-	import Bot from "lucide-svelte/icons/bot";
-	import ChartPie from "lucide-svelte/icons/chart-pie";
-	import Command from "lucide-svelte/icons/command";
-	import Frame from "lucide-svelte/icons/frame";
-	import GalleryVerticalEnd from "lucide-svelte/icons/gallery-vertical-end";
-	import Map from "lucide-svelte/icons/map";
-	import Settings2 from "lucide-svelte/icons/settings-2";
-	import SquareTerminal from "lucide-svelte/icons/square-terminal";
+	import AudioWaveform from 'lucide-svelte/icons/audio-waveform';
+	import BookOpen from 'lucide-svelte/icons/book-open';
+	import Bot from 'lucide-svelte/icons/bot';
+	import ChartPie from 'lucide-svelte/icons/chart-pie';
+	import Command from 'lucide-svelte/icons/command';
+	import Frame from 'lucide-svelte/icons/frame';
+	import GalleryVerticalEnd from 'lucide-svelte/icons/gallery-vertical-end';
+	import Map from 'lucide-svelte/icons/map';
+	import Settings2 from 'lucide-svelte/icons/settings-2';
+	import SquareTerminal from 'lucide-svelte/icons/square-terminal';
 
 	// This is sample data.
 	const data = {
 		user: {
-			name: "shadcn",
-			email: "m@example.com",
-			avatar: "/avatars/shadcn.jpg",
+			name: 'shadcn',
+			email: 'm@example.com',
+			avatar: '/avatars/shadcn.jpg'
 		},
 		teams: [
 			{
-				name: "BigStep",
+				name: 'BigStep',
 				logo: GalleryVerticalEnd,
-				plan: "Enterprise",
+				plan: 'Enterprise'
 			},
 			{
-				name: "Acme Corp.",
+				name: 'Acme Corp.',
 				logo: AudioWaveform,
-				plan: "Startup",
+				plan: 'Startup'
 			},
 			{
-				name: "Evil Corp.",
+				name: 'Evil Corp.',
 				logo: Command,
-				plan: "Free",
-			},
+				plan: 'Free'
+			}
 		],
 		navMain: [
 			{
-				title: "Assistant",
-				url: "#",
+				title: 'Assistant',
+				url: '#',
 				icon: Bot,
 				isActive: true,
 				items: [
 					{
-						title: "History",
-						url: "#",
+						title: 'Chat',
+						url: '/assistant'
 					},
 					{
-						title: "Starred",
-						url: "#",
+						title: 'History',
+						url: '#'
 					},
 					{
-						title: "Settings",
-						url: "#",
+						title: 'Starred',
+						url: '#'
 					},
-				],
+					{
+						title: 'Settings',
+						url: '#'
+					}
+				]
 			},
 			{
-				title: "Documentation",
-				url: "#",
-				icon: BookOpen,
+				title: 'Documentation',
+				url: '/documentation',
+				icon: BookOpen
 				// items: [
 				// 	{
 				// 		title: "Introduction",
@@ -79,42 +83,47 @@
 				// ],
 			},
 			{
-				title: "Settings",
-				url: "#",
-				icon: Settings2,
+				title: 'Settings',
+				url: '/settings',
+				icon: Settings2
 			},
+			{
+				title: 'Model Selection',
+				url: '/models',
+				icon: SquareTerminal
+			}
 		],
 		projects: [
 			{
-				name: "Design Engineering",
-				url: "#",
-				icon: Frame,
+				name: 'Design Engineering',
+				url: '#',
+				icon: Frame
 			},
 			{
-				name: "Sales & Marketing",
-				url: "#",
-				icon: ChartPie,
+				name: 'Sales & Marketing',
+				url: '#',
+				icon: ChartPie
 			},
 			{
-				name: "Travel",
-				url: "#",
-				icon: Map,
-			},
-		],
+				name: 'Travel',
+				url: '#',
+				icon: Map
+			}
+		]
 	};
 </script>
 
 <script lang="ts">
-	import NavMain from "$lib/components/nav-main.svelte";
-	import NavProjects from "$lib/components/nav-projects.svelte";
-	import NavUser from "$lib/components/nav-user.svelte";
-	import TeamSwitcher from "$lib/components/team-switcher.svelte";
-	import * as Sidebar from "$lib/components/ui/sidebar/index.js";
-	import type { ComponentProps } from "svelte";
+	import NavMain from '$lib/components/nav-main.svelte';
+	import NavProjects from '$lib/components/nav-projects.svelte';
+	import NavUser from '$lib/components/nav-user.svelte';
+	import TeamSwitcher from '$lib/components/team-switcher.svelte';
+	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
+	import type { ComponentProps } from 'svelte';
 
 	let {
 		ref = $bindable(null),
-		collapsible = "icon",
+		collapsible = 'icon',
 		...restProps
 	}: ComponentProps<typeof Sidebar.Root> = $props();
 </script>

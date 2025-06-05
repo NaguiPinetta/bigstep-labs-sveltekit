@@ -1,46 +1,47 @@
 // src/routes/api/chat/+server.ts
-import type { RequestHandler } from '@sveltejs/kit';
 import { json } from '@sveltejs/kit';
-
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
+import type { RequestHandler } from './$types';
+import { OPENAI_API_KEY } from '$env/static/private';
+import { getModel, getPromptForModel } from '$lib/server/llm';
 
 export const POST: RequestHandler = async ({ request }) => {
-	const { prompt, history } = await request.json();
+	const { prompt, history, modelId, customPrompt } = await request.json();
+	console.log('Received chat request:', { prompt, history, modelId, customPrompt });
+
+	const selectedModelId = modelId || 'gpt-3.5-turbo';
+	const model = getModel(selectedModelId);
+	const systemPrompt = customPrompt || getPromptForModel(selectedModelId);
 
 	const messages = [
-		{
-			role: 'system',
-			content:
-				'Você é um assistente de idiomas motivador que ajuda alunos a praticar inglês com base em frases e correções guiadas.'
-		},
-		...(history || []),
+		{ role: 'system', content: systemPrompt },
+		...history.map((m: any) => ({
+			role: m.role,
+			content: m.content
+		})),
 		{ role: 'user', content: prompt }
 	];
 
-	const res = await fetch(OPENAI_API_URL, {
+	const response = await fetch('https://api.openai.com/v1/chat/completions', {
 		method: 'POST',
 		headers: {
-			Authorization: `Bearer ${OPENAI_API_KEY}`,
-			'Content-Type': 'application/json'
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${OPENAI_API_KEY}`
 		},
 		body: JSON.stringify({
-			model: 'gpt-4',
-			messages,
-			temperature: 0.6
+			model: model?.model || 'gpt-3.5-turbo',
+			messages
 		})
 	});
 
-	if (!res.ok) {
-		console.error('OpenAI API Error:', await res.text());
-		return json(
-			{ reply: 'Desculpe, algo deu errado ao tentar gerar uma resposta.' },
-			{ status: 500 }
-		);
+	const raw = await response.text();
+	console.log('OpenAI response:', raw);
+
+	if (!response.ok) {
+		return json({ reply: 'Erro ao conectar ao modelo GPT.' }, { status: 500 });
 	}
 
-	const data = await res.json();
-	const reply = data.choices[0]?.message?.content ?? '...';
+	const data = JSON.parse(raw);
+	const reply = data.choices?.[0]?.message?.content ?? 'Sem resposta do modelo.';
 
 	return json({ reply });
 };

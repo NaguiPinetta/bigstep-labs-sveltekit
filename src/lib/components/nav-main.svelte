@@ -1,10 +1,10 @@
 <script lang="ts">
-	import * as Collapsible from "$lib/components/ui/collapsible/index.js";
-	import * as Sidebar from "$lib/components/ui/sidebar/index.js";
-	import ChevronRight from "lucide-svelte/icons/chevron-right";
+	import * as Collapsible from '$lib/components/ui/collapsible/index.js';
+	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
+	import ChevronRight from 'lucide-svelte/icons/chevron-right';
 
 	let {
-		items,
+		items
 	}: {
 		items: {
 			title: string;
@@ -30,20 +30,34 @@
 					<Sidebar.MenuItem {...props}>
 						<Collapsible.Trigger>
 							{#snippet child({ props })}
-								<Sidebar.MenuButton {...props}>
-									{#snippet tooltipContent()}
-										{mainItem.title}
-									{/snippet}
-									{#if mainItem.icon}
-										<mainItem.icon />
-									{/if}
-									<span>{mainItem.title}</span>
-									{#if mainItem.title !== "Documentation" && mainItem.title !== "Settings"}
-										<ChevronRight
-											class="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90"
-										/>
-									{/if}
-								</Sidebar.MenuButton>
+								{#if mainItem.url && mainItem.url !== '#'}
+									<a href={mainItem.url} use:link class="w-full">
+										<Sidebar.MenuButton {...props}>
+											{#snippet tooltipContent()}
+												{mainItem.title}
+											{/snippet}
+											{#if mainItem.icon}
+												<mainItem.icon />
+											{/if}
+											<span>{mainItem.title}</span>
+										</Sidebar.MenuButton>
+									</a>
+								{:else}
+									<Sidebar.MenuButton {...props}>
+										{#snippet tooltipContent()}
+											{mainItem.title}
+										{/snippet}
+										{#if mainItem.icon}
+											<mainItem.icon />
+										{/if}
+										<span>{mainItem.title}</span>
+										{#if mainItem.title !== 'Documentation' && mainItem.title !== 'Settings'}
+											<ChevronRight
+												class="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90"
+											/>
+										{/if}
+									</Sidebar.MenuButton>
+								{/if}
 							{/snippet}
 						</Collapsible.Trigger>
 						<Collapsible.Content>
@@ -53,7 +67,7 @@
 										<Sidebar.MenuSubItem>
 											<Sidebar.MenuSubButton>
 												{#snippet child({ props })}
-													<a href={subItem.url} {...props}>
+													<a href={subItem.url} use:link {...props}>
 														<span>{subItem.title}</span>
 													</a>
 												{/snippet}
