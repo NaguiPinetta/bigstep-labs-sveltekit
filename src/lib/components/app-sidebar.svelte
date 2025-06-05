@@ -47,15 +47,15 @@
 					},
 					{
 						title: 'History',
-						url: '#'
+						url: '/assistant/history'
 					},
 					{
 						title: 'Starred',
-						url: '#'
+						url: '/assistant/starred'
 					},
 					{
 						title: 'Settings',
-						url: '#'
+						url: '/assistant/settings'
 					}
 				]
 			},
@@ -88,7 +88,7 @@
 				icon: Settings2
 			},
 			{
-				title: 'Model Selection',
+				title: 'Model Profiles',
 				url: '/models',
 				icon: SquareTerminal
 			}
