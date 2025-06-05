@@ -1,4 +1,5 @@
 import { writable } from 'svelte/store';
+import { user } from './user';
 
 export type ModelProfile = {
 	id: string;
@@ -7,12 +8,22 @@ export type ModelProfile = {
 	apiKeyId: string;
 	provider: string;
 	systemPrompt: string;
+	user_id: string;
 };
+
+let currentUserId = '';
+user.subscribe((u) => {
+	currentUserId = u?.id || '';
+});
+
+function storageKey() {
+	return currentUserId ? `bigstep-models-${currentUserId}` : 'bigstep-models-guest';
+}
 
 function loadModels(): ModelProfile[] {
 	if (typeof window !== 'undefined') {
 		try {
-			return JSON.parse(localStorage.getItem('model_profiles') || '[]');
+			return JSON.parse(localStorage.getItem(storageKey()) || '[]');
 		} catch {
 			return [];
 		}
@@ -22,7 +33,7 @@ function loadModels(): ModelProfile[] {
 
 function saveModels(models: ModelProfile[]) {
 	if (typeof window !== 'undefined') {
-		localStorage.setItem('model_profiles', JSON.stringify(models));
+		localStorage.setItem(storageKey(), JSON.stringify(models));
 	}
 }
 
@@ -33,11 +44,17 @@ function createModelsStore() {
 		set(loadModels());
 	}
 
+	function setUserId(newId: string) {
+		currentUserId = newId;
+		refresh();
+	}
+
 	return {
 		subscribe,
+		setUserId,
 		addModel: (model: ModelProfile) => {
 			update((models) => {
-				const newModels = [...models, model];
+				const newModels = [model, ...models];
 				saveModels(newModels);
 				return newModels;
 			});

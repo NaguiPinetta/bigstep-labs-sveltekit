@@ -3,6 +3,7 @@
 	import { history, type ChatSession } from '$lib/stores/history';
 	import { Card } from '$lib/components/ui/card/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
+	import { goto } from '$app/navigation';
 
 	let sessions: ChatSession[] = [];
 	let selectedSession: ChatSession | null = null;
@@ -17,11 +18,6 @@
 
 	onMount(() => {
 		history.refresh();
-		const handler = (e: MouseEvent) => {
-			if (exportMenuOpen) closeExportMenu();
-		};
-		document.addEventListener('click', handler);
-		return () => document.removeEventListener('click', handler);
 	});
 
 	function getPreview(session: ChatSession) {
@@ -81,6 +77,18 @@
 		}
 	}
 
+	function handleResume(session: ChatSession) {
+		localStorage.setItem(
+			'bigstep-resume-session',
+			JSON.stringify({
+				messages: session.messages,
+				modelId: session.modelId,
+				modelName: session.modelName
+			})
+		);
+		goto('/assistant/chat');
+	}
+
 	$: filteredSessions = sessions.filter((session) => {
 		if (!search) return true;
 		const lower = search.toLowerCase();
@@ -117,18 +125,22 @@
 					</thead>
 					<tbody>
 						{#each filteredSessions as session}
-							<tr
-								class="cursor-pointer border-b hover:bg-muted"
-								on:click={() => openSession(session)}
-							>
+							<tr class="border-b hover:bg-muted">
 								<td class="px-3 py-2">{new Date(session.started).toLocaleString()}</td>
 								<td class="px-3 py-2">{session.modelName}</td>
-								<td class="px-3 py-2">{getPreview(session)}</td>
+								<td class="cursor-pointer px-3 py-2" on:click={() => openSession(session)}
+									>{getPreview(session)}</td
+								>
 								<td class="w-40 px-3 py-2">
 									<div class="relative inline-block">
 										<button
 											class="mr-1 rounded bg-muted px-2 py-1 text-xs"
 											on:click|stopPropagation={() => exportSession(session, 'md')}>Export</button
+										>
+										<button
+											class="mr-1 rounded bg-muted px-2 py-1 text-xs"
+											on:click|stopPropagation={() => handleResume(session)}
+											on:mousedown|stopPropagation>Resume</button
 										>
 										<button
 											class="rounded bg-destructive px-2 py-1 text-xs text-destructive-foreground"

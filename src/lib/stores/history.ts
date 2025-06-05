@@ -1,4 +1,6 @@
 import { writable } from 'svelte/store';
+import { get } from 'svelte/store';
+import { user } from './user';
 
 export type ChatMessage = {
 	role: 'user' | 'assistant';
@@ -12,14 +14,22 @@ export type ChatSession = {
 	modelId: string;
 	modelName: string;
 	messages: ChatMessage[];
+	user_id: string;
 };
 
-const STORAGE_KEY = 'bigstep-chat-sessions';
+let currentUserId = '';
+user.subscribe((u) => {
+	currentUserId = u?.id || '';
+});
+
+function storageKey() {
+	return currentUserId ? `bigstep-chat-sessions-${currentUserId}` : 'bigstep-chat-sessions-guest';
+}
 
 function loadSessions(): ChatSession[] {
 	if (typeof localStorage !== 'undefined') {
 		try {
-			return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+			return JSON.parse(localStorage.getItem(storageKey()) || '[]');
 		} catch {
 			return [];
 		}
@@ -29,7 +39,7 @@ function loadSessions(): ChatSession[] {
 
 function saveSessions(sessions: ChatSession[]) {
 	if (typeof localStorage !== 'undefined') {
-		localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
+		localStorage.setItem(storageKey(), JSON.stringify(sessions));
 	}
 }
 
@@ -40,9 +50,15 @@ function createHistoryStore() {
 		set(loadSessions());
 	}
 
+	function setUserId(newId: string) {
+		currentUserId = newId;
+		refresh();
+	}
+
 	return {
 		subscribe,
 		refresh,
+		setUserId,
 		addSession: (session: ChatSession) => {
 			update((sessions) => {
 				const newSessions = [session, ...sessions];

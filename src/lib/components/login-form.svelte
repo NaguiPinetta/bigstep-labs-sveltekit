@@ -1,8 +1,22 @@
 <script lang="ts">
-	import { Button } from "$lib/components/ui/button/index.js";
-	import * as Card from "$lib/components/ui/card/index.js";
-	import { Input } from "$lib/components/ui/input/index.js";
-	import { Label } from "$lib/components/ui/label/index.js";
+	import { Button } from '$lib/components/ui/button/index.js';
+	import * as Card from '$lib/components/ui/card/index.js';
+	import { Input } from '$lib/components/ui/input/index.js';
+	import { Label } from '$lib/components/ui/label/index.js';
+	import { supabase } from '$lib/supabaseClient';
+
+	let loading = false;
+	let error = '';
+	let email = '';
+
+	async function signInWithMagicLink() {
+		loading = true;
+		error = '';
+		const { error: err } = await supabase.auth.signInWithOtp({ email });
+		if (err) error = err.message;
+		else error = 'Check your email for the login link!';
+		loading = false;
+	}
 </script>
 
 <Card.Root class="mx-auto max-w-sm">
@@ -12,23 +26,16 @@
 	</Card.Header>
 	<Card.Content>
 		<div class="grid gap-4">
-			<!--
-			<div class="grid gap-2">
+			<form on:submit|preventDefault={signInWithMagicLink} class="grid gap-2">
 				<Label for="email">Email</Label>
-				<Input id="email" type="email" placeholder="m@example.com" required />
-			</div>
-			<div class="grid gap-2">
-				<div class="flex items-center">
-					<Label for="password">Password</Label>
-					<a href="##" class="ml-auto inline-block text-sm underline">
-						Forgot your password?
-					</a>
-				</div>
-				<Input id="password" type="password" required />
-			</div>
-			<Button type="submit" class="w-full">Login</Button>
-			-->
-			<Button variant="outline" class="w-full">Login with Google</Button>
+				<Input id="email" type="email" placeholder="you@email.com" bind:value={email} required />
+				<Button type="submit" class="w-full" disabled={loading || !email}>
+					{loading ? 'Sending...' : 'Send Magic Link'}
+				</Button>
+			</form>
+			{#if error}
+				<div class="mt-2 text-sm text-red-600">{error}</div>
+			{/if}
 		</div>
 		<div class="mt-4 text-center text-sm">
 			Don't have an account?

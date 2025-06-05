@@ -1,14 +1,27 @@
 <script lang="ts">
 	import { page } from '$app/stores';
+	import { onMount } from 'svelte';
+	import { user } from '$lib/stores/user';
+	import { goto } from '$app/navigation';
 	import LoginForm from '$lib/components/login-form.svelte';
 	import AppSidebar from '$lib/components/app-sidebar.svelte';
 	import * as Breadcrumb from '$lib/components/ui/breadcrumb/index.js';
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import '../app.css';
+
+	onMount(() => {
+		const path = $page.url.pathname;
+		if (!$user && path !== '/login') {
+			goto('/login');
+		}
+		if ($user && path === '/login') {
+			goto('/assistant/chat');
+		}
+	});
 </script>
 
-{#if $page.route.id?.includes('auth')}
+{#if $page.route.id === '/login'}
 	<div class="flex h-screen w-full items-center justify-center px-4">
 		<LoginForm />
 	</div>
