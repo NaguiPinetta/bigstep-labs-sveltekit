@@ -63,5 +63,8 @@
 		"marked": "^15.0.12",
 		"mode-watcher": "^0.5.0",
 		"postgres": "^3.4.4"
+	},
+	"engines": {
+		"node": "20.x"
 	}
 }
