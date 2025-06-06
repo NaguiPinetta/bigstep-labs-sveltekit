@@ -3,7 +3,7 @@
 	import { marked } from 'marked';
 
 	// @ts-ignore
-	import markdown from './content.md?raw';
+	import markdown from '$lib/docs/overview.md?raw';
 
 	const html: string = marked.parse(markdown);
 </script>
