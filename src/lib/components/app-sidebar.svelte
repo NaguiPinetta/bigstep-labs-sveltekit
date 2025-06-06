@@ -163,7 +163,9 @@
 		<!-- <NavProjects projects={data.projects} /> -->
 	</Sidebar.Content>
 	<Sidebar.Footer>
-		<NavUser user={data.user} />
+		{#if $userStore}
+			<NavUser user={{ ...$userStore, avatar: $userStore.avatar_url }} />
+		{/if}
 	</Sidebar.Footer>
 	<Sidebar.Rail />
 </Sidebar.Root>

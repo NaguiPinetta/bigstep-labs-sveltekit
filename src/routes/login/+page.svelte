@@ -17,8 +17,16 @@
 
 	async function signInWithMagicLink() {
 		error = '';
-		if (email !== 'jdpinetta@gmail.com') {
-			error = 'Only jdpinetta@gmail.com is allowed for magic link login.';
+		const allowedEmails = [
+			'jdpinetta@gmail.com',
+			'bigstepidiomas@gmail.com',
+			'jbruno@descartes.com',
+			'jpinetta@descartes.com',
+			'vtheimann@descartes.com'
+		];
+		if (!allowedEmails.includes(email)) {
+			error =
+				'Only jdpinetta@gmail.com and bigstepidiomas@gmail.com are allowed for magic link login.';
 			return;
 		}
 		loading = true;
