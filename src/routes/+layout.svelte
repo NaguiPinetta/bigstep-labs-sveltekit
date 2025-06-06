@@ -12,6 +12,7 @@
 
 	onMount(() => {
 		const path = $page.url.pathname;
+		console.log('[layout] onMount: $user =', $user, 'path =', path);
 		if (!$user && path !== '/login') {
 			goto('/login');
 		}

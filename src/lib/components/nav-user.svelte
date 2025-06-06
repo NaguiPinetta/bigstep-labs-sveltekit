@@ -11,13 +11,35 @@
 	import Sparkles from 'lucide-svelte/icons/sparkles';
 	import { supabase } from '$lib/supabaseClient';
 	import { goto } from '$app/navigation';
+	import { user as userStore } from '$lib/stores/user';
 
 	let { user }: { user: { name: string; email: string; avatar: string } } = $props();
 	const sidebar = useSidebar();
 
+	console.log('[nav-user] user prop:', user);
+	console.log('[nav-user] typeof user:', typeof user);
+	console.log('[nav-user] user.set exists:', typeof user?.set === 'function');
+
 	async function logout() {
-		await supabase.auth.signOut();
+		console.log('[logout] Logout button clicked');
+		const before = await supabase.auth.getSession();
+		console.log('[logout] Session before signOut:', before);
+		try {
+			const { error } = await supabase.auth.signOut();
+			if (error) {
+				console.error('[logout] Supabase signOut error:', error);
+			} else {
+				console.log('[logout] Supabase signOut success');
+			}
+		} catch (e) {
+			console.error('[logout] Exception during signOut:', e);
+		}
+		const after = await supabase.auth.getSession();
+		console.log('[logout] Session after signOut:', after);
+		userStore.set(null);
+		console.log('[logout] userStore.set(null) called');
 		goto('/login');
+		console.log('[logout] Redirected to /login');
 	}
 </script>
 
@@ -84,7 +106,7 @@
 					</DropdownMenu.Item>
 				</DropdownMenu.Group>
 				<DropdownMenu.Separator />
-				<DropdownMenu.Item on:click={logout}>
+				<DropdownMenu.Item on:select={logout}>
 					<LogOut />
 					Log out
 				</DropdownMenu.Item>

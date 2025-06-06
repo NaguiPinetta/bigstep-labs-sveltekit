@@ -9,6 +9,7 @@
 	import Map from 'lucide-svelte/icons/map';
 	import Settings2 from 'lucide-svelte/icons/settings-2';
 	import SquareTerminal from 'lucide-svelte/icons/square-terminal';
+	import LogOut from 'lucide-svelte/icons/log-out';
 
 	// This is sample data.
 	const data = {
@@ -120,12 +121,37 @@
 	import TeamSwitcher from '$lib/components/team-switcher.svelte';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import type { ComponentProps } from 'svelte';
+	import { supabase } from '$lib/supabaseClient';
+	import { goto } from '$app/navigation';
+	import { user as userStore } from '$lib/stores/user';
 
 	let {
 		ref = $bindable(null),
 		collapsible = 'icon',
 		...restProps
 	}: ComponentProps<typeof Sidebar.Root> = $props();
+
+	async function logout() {
+		console.log('[sidebar logout] Logout button clicked');
+		const before = await supabase.auth.getSession();
+		console.log('[sidebar logout] Session before signOut:', before);
+		try {
+			const { error } = await supabase.auth.signOut();
+			if (error) {
+				console.error('[sidebar logout] Supabase signOut error:', error);
+			} else {
+				console.log('[sidebar logout] Supabase signOut success');
+			}
+		} catch (e) {
+			console.error('[sidebar logout] Exception during signOut:', e);
+		}
+		const after = await supabase.auth.getSession();
+		console.log('[sidebar logout] Session after signOut:', after);
+		userStore.set(null);
+		console.log('[sidebar logout] userStore.set(null) called');
+		goto('/login');
+		console.log('[sidebar logout] Redirected to /login');
+	}
 </script>
 
 <Sidebar.Root bind:ref {collapsible} {...restProps}>
@@ -133,7 +159,7 @@
 		<TeamSwitcher teams={data.teams} />
 	</Sidebar.Header>
 	<Sidebar.Content>
-		<NavMain items={data.navMain} />
+		<NavMain items={data.navMain} {logout} />
 		<!-- <NavProjects projects={data.projects} /> -->
 	</Sidebar.Content>
 	<Sidebar.Footer>
