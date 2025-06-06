@@ -12,12 +12,9 @@
 	} from '$lib/components/ui/sheet/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { toast } from '$lib/stores/toast';
-
-	// Dummy API keys for dropdown (replace with real store integration)
-	const apiKeys = [
-		{ id: 'openai-123', provider: 'OpenAI', label: 'OpenAI (GPT)' },
-		{ id: 'gemini-456', provider: 'Gemini', label: 'Gemini' }
-	];
+	import { get } from 'svelte/store';
+	import { user } from '$lib/stores/user';
+	import { supabase } from '$lib/supabaseClient';
 
 	let showForm = false;
 	let editModel: ModelProfile | null = null;
@@ -27,15 +24,36 @@
 	let form: Partial<ModelProfile> = {};
 	let formError = '';
 
+	let apiKeys: { id: string; provider: string; label: string }[] = [];
+	let apiKeyError = '';
+
 	const unsubscribe = models.subscribe((val) => (modelList = val));
 
-	onMount(() => {
-		models.refresh();
+	onMount(async () => {
+		models.fetchModels();
+		// Fetch real API keys for the current user
+		const currentUser = get(user);
+		if (!currentUser) return;
+		const { data, error } = await supabase
+			.from('api_keys')
+			.select('id, provider')
+			.eq('user_id', currentUser.id);
+		if (error) {
+			apiKeyError = 'Failed to load API keys.';
+			console.error('[models] Error fetching API keys:', error);
+			apiKeys = [];
+			return;
+		}
+		apiKeys = (data || []).map((k) => ({
+			id: k.id,
+			provider: k.provider,
+			label: `${k.provider} (${k.id.slice(0, 8)})`
+		}));
 	});
 
 	function handleAdd() {
 		editModel = null;
-		form = { name: '', description: '', apiKeyId: '', provider: '', systemPrompt: '' };
+		form = { name: '', description: '', api_key_id: '', provider: '', system_prompt: '' };
 		showForm = true;
 	}
 
@@ -57,29 +75,41 @@
 
 	function handleFormSave() {
 		formError = '';
-		if (!form.name || !form.apiKeyId || !form.systemPrompt) {
+		if (!form.name || !form.api_key_id || !form.system_prompt) {
 			formError = 'Name, API Key, and System Prompt are required.';
 			return;
 		}
-		const selectedKey = apiKeys.find((k) => k.id === form.apiKeyId);
+		const selectedKey = apiKeys.find((k) => k.id === form.api_key_id);
 		if (!selectedKey) {
 			formError = 'Please select a valid API Key.';
 			return;
 		}
-		const model: ModelProfile = {
-			id: editModel?.id || `model-${Date.now()}`,
+		const currentUser = get(user);
+		if (!currentUser) {
+			formError = 'User not authenticated.';
+			return;
+		}
+		const model = {
 			name: form.name,
 			description: form.description || '',
-			apiKeyId: form.apiKeyId,
+			api_key_id: form.api_key_id,
 			provider: selectedKey.provider,
-			systemPrompt: form.systemPrompt
+			system_prompt: form.system_prompt,
+			user_id: currentUser.id
 		};
 		if (editModel) {
-			models.updateModel(model.id, model);
+			models.updateModel(editModel.id, model);
 		} else {
-			models.addModel(model);
+			models.addModel(model).then((error) => {
+				if (error) {
+					formError = error.message || 'Failed to add model.';
+					return;
+				}
+				showForm = false;
+				toast.set({ message: 'Model saved!', type: 'success' });
+			});
+			return;
 		}
-		models.refresh();
 		showForm = false;
 		toast.set({ message: 'Model saved!', type: 'success' });
 	}
@@ -115,7 +145,7 @@
 				<label class="block w-full text-left text-sm font-medium"
 					>API Key / Provider
 					<select
-						bind:value={form.apiKeyId}
+						bind:value={form.api_key_id}
 						required
 						class="mt-1 w-full rounded border border-input bg-background p-2 text-sm"
 					>
@@ -125,10 +155,13 @@
 						{/each}
 					</select>
 				</label>
+				{#if apiKeyError}
+					<div class="text-xs text-red-600">{apiKeyError}</div>
+				{/if}
 				<label class="block w-full text-left text-sm font-medium"
 					>System Prompt
 					<textarea
-						bind:value={form.systemPrompt}
+						bind:value={form.system_prompt}
 						required
 						class="mt-1 min-h-[80px] w-full rounded border border-input bg-background p-2 text-sm"
 					/>
@@ -183,9 +216,9 @@
 									<td class="px-3 py-2">{model.provider}</td>
 									<td class="px-3 py-2">{model.description}</td>
 									<td class="px-3 py-2"
-										>{model.systemPrompt.length > 32
-											? model.systemPrompt.slice(0, 32) + '...'
-											: model.systemPrompt}</td
+										>{model.system_prompt.length > 32
+											? model.system_prompt.slice(0, 32) + '...'
+											: model.system_prompt}</td
 									>
 									<td class="flex gap-2 px-3 py-2">
 										<button

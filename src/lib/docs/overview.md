@@ -121,3 +121,30 @@
 - Notifications and in-app messaging
 - Advanced documentation (search, interactive guides)
 - Mobile UI polish
+
+---
+
+# Troubleshooting & Lessons Learned (June 2024)
+
+## Row Level Security (RLS) & Supabase Policies
+
+- RLS must be enabled on all user data tables (e.g., `models`).
+- Policies like `user_id = auth.uid()` restrict access to only the user's own data.
+- When using the Supabase dashboard or SQL editor, you have full access (service role), so queries always work.
+- When using the Supabase client in your app/backend, RLS applies and only allows access if the user's JWT is present and valid.
+- If your backend uses only the anon key (no JWT), `auth.uid()` is null and RLS policies will block access.
+- A permissive policy like `USING (true)` will allow all reads, but is not secure for production.
+- Always test RLS policies with the actual client context (with JWT) to ensure users can only access their own data.
+
+## Debugging Steps
+
+- If your app cannot read user data but the SQL editor can, check RLS and policies first.
+- Add logging to your backend to see what IDs and data are being sent/received.
+- Temporarily use a permissive policy to isolate RLS issues, then revert to secure policies.
+- Ensure your backend passes the user's JWT to Supabase for all authenticated requests.
+
+## Next Steps for Security
+
+- Update backend logic to use the user's JWT/session when querying Supabase.
+- Remove permissive policies and use secure, user-scoped RLS policies.
+- Regularly review and test RLS as you add new features or tables.

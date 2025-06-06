@@ -5,6 +5,17 @@ import { models } from '$lib/stores/models';
 import { apiKeys } from '$lib/stores/apiKeys';
 
 // On app load, check for existing session
+function syncSupabaseSessionToCookies(session) {
+	if (session?.access_token && session?.refresh_token) {
+		document.cookie = `sb-access-token=${session.access_token}; path=/`;
+		document.cookie = `sb-refresh-token=${session.refresh_token}; path=/`;
+	} else {
+		// Clear cookies on logout
+		document.cookie = 'sb-access-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+		document.cookie = 'sb-refresh-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+	}
+}
+
 supabase.auth.getUser().then(({ data, error }) => {
 	console.log('[hooks.client] supabase.auth.getUser:', { data, error });
 	if (data?.user) {
@@ -21,9 +32,13 @@ supabase.auth.getUser().then(({ data, error }) => {
 			name: user_metadata?.full_name || user_metadata?.name || email || '',
 			avatar_url: (user_metadata?.avatar_url || '') as string
 		});
+		supabase.auth.getSession().then(({ data: sessionData }) => {
+			syncSupabaseSessionToCookies(sessionData?.session);
+		});
 	} else {
 		user.set(null);
 		console.log('[hooks.client] user.set(null) (from getUser)');
+		syncSupabaseSessionToCookies(null);
 	}
 });
 
@@ -44,15 +59,17 @@ supabase.auth.onAuthStateChange((_event, session) => {
 			name: user_metadata?.full_name || user_metadata?.name || email || '',
 			avatar_url: (user_metadata?.avatar_url || '') as string
 		});
+		syncSupabaseSessionToCookies(session);
 	} else {
 		user.set(null);
 		console.log('[hooks.client] user.set(null) (from onAuthStateChange)');
+		syncSupabaseSessionToCookies(null);
 	}
 });
 
 // Keep all stores in sync with the current user
 user.subscribe((u) => {
 	history.setUserId(u?.id || '');
-	models.setUserId(u?.id || '');
-	apiKeys.setUserId(u?.id || '');
+	// models.setUserId(u?.id || ''); // Removed, not needed for Supabase-backed store
+	// apiKeys.setUserId(u?.id || ''); // Removed, not needed for Supabase-backed store
 });

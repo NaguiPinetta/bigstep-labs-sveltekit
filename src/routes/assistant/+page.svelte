@@ -20,6 +20,7 @@
 	let systemPrompt = 'You are a helpful assistant.';
 	let modelProfiles: ModelProfile[] = [];
 	let sessionStart: string = new Date().toISOString();
+	let modelsLoaded = false;
 
 	selectedModelId.subscribe((id: string) => {
 		modelId = id;
@@ -27,7 +28,10 @@
 	customPrompt.subscribe((val) => {
 		systemPrompt = val;
 	});
-	models.subscribe((val) => (modelProfiles = val));
+	models.subscribe((val) => {
+		modelProfiles = val;
+		modelsLoaded = true;
+	});
 
 	const demoUser = {
 		name: 'shadcn',
@@ -79,8 +83,7 @@
 				body: JSON.stringify({
 					prompt: userMessage,
 					history: messages,
-					modelId,
-					customPrompt: systemPrompt
+					modelId
 				})
 			});
 
@@ -114,7 +117,8 @@
 		const model = modelProfiles.find((m) => m.id === id);
 		if (model) {
 			selectedModelId.set(model.id);
-			customPrompt.set(model.systemPrompt);
+			modelId = model.id;
+			customPrompt.set(model.system_prompt);
 		}
 	}
 
@@ -127,6 +131,17 @@
 	}
 
 	onMount(() => {
+		models.fetchModels();
+		// Ensure modelId is a valid UUID from user models
+		setTimeout(() => {
+			if (modelProfiles.length > 0) {
+				const found = modelProfiles.find((m) => m.id === modelId);
+				if (!found) {
+					modelId = modelProfiles[0].id;
+					selectedModelId.set(modelId);
+				}
+			}
+		}, 500);
 		console.log('Selected Model:', $selectedModelId);
 		console.log('Custom Prompt:', $customPrompt);
 		const resume = localStorage.getItem('bigstep-resume-session');
@@ -164,6 +179,7 @@
 						class="w-full rounded border border-input bg-background p-1 text-sm sm:w-auto"
 						bind:value={modelId}
 						on:change={handleModelChange}
+						disabled={!modelsLoaded || !modelId}
 					>
 						{#each modelProfiles as model}
 							<option value={model.id}>{model.name}</option>
@@ -240,8 +256,11 @@
 				bind:value={inputMessage}
 				placeholder="Digite sua mensagem..."
 				class="flex-1"
+				disabled={!modelsLoaded || !modelId}
 			/>
-			<Button.Button type="submit" disabled={isLoading}>Enviar</Button.Button>
+			<Button.Button type="submit" disabled={!modelsLoaded || !modelId || isLoading}
+				>Enviar</Button.Button
+			>
 		</div>
 	</form>
 </div>

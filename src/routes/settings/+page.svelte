@@ -3,13 +3,9 @@
 	import { Card } from '$lib/components/ui/card/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
-	import {
-		DropdownMenu,
-		DropdownMenuTrigger,
-		DropdownMenuContent,
-		DropdownMenuRadioGroup,
-		DropdownMenuRadioItem
-	} from '$lib/components/ui/dropdown-menu/index.js';
+	import { apiKeys, type ApiKey } from '$lib/stores/apiKeys';
+	import { get } from 'svelte/store';
+	import { user } from '$lib/stores/user';
 
 	const PROVIDERS = [
 		{ label: 'OpenAI (GPT)', value: 'openai' },
@@ -19,12 +15,15 @@
 
 	let provider = PROVIDERS[0].value;
 	let apiKey = '';
-	let keys: { provider: string; key: string }[] = [];
 	let editingIndex: number | null = null;
 	let editingKey = '';
 	let showKey: Record<number, boolean> = {};
 	let toast = '';
 	let toastTimeout: ReturnType<typeof setTimeout> | null = null;
+	let error = '';
+
+	let keys: ApiKey[] = [];
+	const unsubscribe = apiKeys.subscribe((val) => (keys = val));
 
 	function showToast(message: string) {
 		toast = message;
@@ -33,47 +32,35 @@
 		toastTimeout = setTimeout(() => (toast = ''), 2000);
 	}
 
-	function saveKeys() {
-		if (typeof window !== 'undefined') {
-			localStorage.setItem('llm_api_keys', JSON.stringify(keys));
-			console.log('[saveKeys] keys saved to localStorage:', keys);
-			// Re-read to ensure reactivity
-			const loaded = JSON.parse(localStorage.getItem('llm_api_keys') || '[]');
-			console.log('[saveKeys] keys loaded from localStorage after save:', loaded);
-			keys = loaded;
-			console.log('[saveKeys] keys after assignment:', keys);
-		} else {
-			console.log('[saveKeys] not running in browser, skipping localStorage');
-		}
-	}
+	onMount(() => {
+		apiKeys.fetchApiKeys();
+	});
 
-	function loadKeys() {
-		if (typeof window !== 'undefined') {
-			const loaded = JSON.parse(localStorage.getItem('llm_api_keys') || '[]');
-			console.log('[loadKeys] keys loaded from localStorage:', loaded);
-			keys = loaded;
-			console.log('[loadKeys] keys after assignment:', keys);
-		} else {
-			console.log('[loadKeys] not running in browser, skipping localStorage');
-		}
-	}
-
-	function addKey() {
-		console.log('[addKey] Save button clicked');
+	async function addKey() {
 		if (!apiKey.trim()) return;
-		keys = [...keys.filter((k) => k.provider !== provider), { provider, key: apiKey.trim() }];
-		console.log('[addKey] keys before save:', keys);
-		saveKeys();
-		apiKey = '';
-		console.log('[addKey] keys after save:', keys);
-		showToast('API key saved!');
+		error = '';
+		const currentUser = get(user);
+		if (!currentUser) {
+			error = 'User not authenticated.';
+			return;
+		}
+		try {
+			await apiKeys.addKey({ provider, key: apiKey.trim(), user_id: currentUser.id });
+			apiKey = '';
+			showToast('API key saved!');
+		} catch (e) {
+			error = 'Failed to add API key.';
+		}
 	}
 
-	function removeKey(idx: number) {
-		keys = keys.filter((_, i) => i !== idx);
-		console.log('[removeKey] keys after removal:', keys);
-		saveKeys();
-		showToast('API key deleted!');
+	async function removeKey(id: string) {
+		error = '';
+		try {
+			await apiKeys.deleteKey(id);
+			showToast('API key deleted!');
+		} catch (e) {
+			error = 'Failed to delete API key.';
+		}
 	}
 
 	function copyKey(key: string) {
@@ -86,13 +73,16 @@
 		editingKey = keys[idx].key;
 	}
 
-	function saveEdit(idx: number) {
-		keys[idx].key = editingKey;
-		console.log('[saveEdit] keys after edit:', keys);
-		saveKeys();
-		editingIndex = null;
-		editingKey = '';
-		showToast('API key updated!');
+	async function saveEdit(idx: number) {
+		error = '';
+		try {
+			await apiKeys.updateKey(keys[idx].id, { key: editingKey });
+			editingIndex = null;
+			editingKey = '';
+			showToast('API key updated!');
+		} catch (e) {
+			error = 'Failed to update API key.';
+		}
 	}
 
 	function cancelEdit() {
@@ -103,11 +93,6 @@
 	function toggleShow(idx: number) {
 		showKey[idx] = !showKey[idx];
 	}
-
-	onMount(() => {
-		loadKeys();
-		console.log('[onMount] keys after loadKeys:', keys);
-	});
 
 	function getProviderLabel(val: string) {
 		return PROVIDERS.find((p) => p.value === val)?.label || val;
@@ -121,7 +106,6 @@
 			<select
 				bind:value={provider}
 				class="w-full rounded border border-input bg-background p-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring sm:w-40"
-				on:change={() => console.log('[select] provider changed to', provider)}
 			>
 				{#each PROVIDERS as p}
 					<option value={p.value}>{p.label}</option>
@@ -135,15 +119,15 @@
 			/>
 			<button
 				class="inline-flex w-full items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 sm:w-auto"
-				on:click={() => {
-					console.log('[native button] Save clicked');
-					addKey();
-				}}
-				disabled={!apiKey.trim()}
+				on:click={addKey}
+				disabled={!apiKey.trim() || !provider}
 			>
 				Save
 			</button>
 		</div>
+		{#if error}
+			<div class="text-xs text-red-600">{error}</div>
+		{/if}
 		<div>
 			{#if keys.length === 0}
 				<div class="text-muted-foreground">No API keys saved.</div>
@@ -200,7 +184,7 @@
 											>
 											<button
 												class="rounded bg-destructive px-2 py-1 text-xs text-destructive-foreground"
-												on:click={() => removeKey(idx)}>Delete</button
+												on:click={() => removeKey(k.id)}>Delete</button
 											>
 										{/if}
 									</td>

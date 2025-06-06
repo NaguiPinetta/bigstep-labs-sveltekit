@@ -1,10 +1,12 @@
+// Drizzle ORM and direct Postgres usage removed for Supabase-only deployment.
+// This file is for demo/lucia only and is not used in production.
+// import { eq } from 'drizzle-orm';
+// import { db } from '$lib/server/db';
+// import * as table from '$lib/server/db/schema';
 import { hash, verify } from '@node-rs/argon2';
 import { encodeBase32LowerCase } from '@oslojs/encoding';
 import { fail, redirect } from '@sveltejs/kit';
-import { eq } from 'drizzle-orm';
 import * as auth from '$lib/server/auth';
-import { db } from '$lib/server/db';
-import * as table from '$lib/server/db/schema';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async (event) => {
@@ -27,22 +29,21 @@ export const actions: Actions = {
 			return fail(400, { message: 'Invalid password' });
 		}
 
-		const results = await db.select().from(table.user).where(eq(table.user.username, username));
+		// const results = await db.select().from(table.user).where(eq(table.user.username, username));
+		// const existingUser = results.at(0);
+		// if (!existingUser) {
+		// 	return fail(400, { message: 'Incorrect username or password' });
+		// }
 
-		const existingUser = results.at(0);
-		if (!existingUser) {
-			return fail(400, { message: 'Incorrect username or password' });
-		}
-
-		const validPassword = await verify(existingUser.passwordHash, password, {
-			memoryCost: 19456,
-			timeCost: 2,
-			outputLen: 32,
-			parallelism: 1
-		});
-		if (!validPassword) {
-			return fail(400, { message: 'Incorrect username or password' });
-		}
+		// const validPassword = await verify(existingUser.passwordHash, password, {
+		// 	memoryCost: 19456,
+		// 	timeCost: 2,
+		// 	outputLen: 32,
+		// 	parallelism: 1
+		// });
+		// if (!validPassword) {
+		// 	return fail(400, { message: 'Incorrect username or password' });
+		// }
 
 		const sessionToken = auth.generateSessionToken();
 		const session = await auth.createSession(sessionToken, existingUser.id);
@@ -72,7 +73,7 @@ export const actions: Actions = {
 		});
 
 		try {
-			await db.insert(table.user).values({ id: userId, username, passwordHash });
+			// await db.insert(table.user).values({ id: userId, username, passwordHash });
 
 			const sessionToken = auth.generateSessionToken();
 			const session = await auth.createSession(sessionToken, userId);

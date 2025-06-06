@@ -164,7 +164,9 @@
 	</Sidebar.Content>
 	<Sidebar.Footer>
 		{#if $userStore}
-			<NavUser user={{ ...$userStore, avatar: $userStore.avatar_url }} />
+			<NavUser
+				user={{ name: $userStore.name, email: $userStore.email, avatar: $userStore.avatar_url }}
+			/>
 		{/if}
 	</Sidebar.Footer>
 	<Sidebar.Rail />

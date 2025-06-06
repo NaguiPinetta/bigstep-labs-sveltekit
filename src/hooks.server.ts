@@ -1,28 +1,43 @@
 import { sequence } from '@sveltejs/kit/hooks';
 import { i18n } from '$lib/i18n';
+import { supabase } from '$lib/supabaseClient';
 import type { Handle } from '@sveltejs/kit';
-import * as auth from '$lib/server/auth.js';
+
+// Extend event.locals type for user
+
+declare module '@sveltejs/kit' {
+	interface Locals {
+		user: {
+			id: string;
+			email: string;
+			name: string;
+			avatar_url: string;
+		} | null;
+	}
+}
 
 const handleAuth: Handle = async ({ event, resolve }) => {
-	const sessionToken = event.cookies.get(auth.sessionCookieName);
-	if (!sessionToken) {
+	const supabaseToken = event.cookies.get('sb-access-token');
+	if (!supabaseToken) {
 		event.locals.user = null;
-		event.locals.session = null;
 		return resolve(event);
 	}
 
-	const { session, user } = await auth.validateSessionToken(sessionToken);
-	if (session) {
-		auth.setSessionTokenCookie(event, sessionToken, session.expiresAt);
-	} else {
-		auth.deleteSessionTokenCookie(event);
+	const { data, error } = await supabase.auth.getUser(supabaseToken);
+	if (error || !data?.user) {
+		event.locals.user = null;
+		return resolve(event);
 	}
 
-	event.locals.user = user;
-	event.locals.session = session;
+	const { id, email, user_metadata } = data.user;
+	event.locals.user = {
+		id: id || '',
+		email: email || '',
+		name: user_metadata?.full_name || user_metadata?.name || email || '',
+		avatar_url: (user_metadata?.avatar_url || '') as string
+	} as unknown as typeof event.locals.user;
 
 	return resolve(event);
 };
 
-const handleParaglide: Handle = i18n.handle();
-export const handle: Handle = sequence(handleAuth, handleParaglide);
+export const handle = sequence(handleAuth, i18n.handle());

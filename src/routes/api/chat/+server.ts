@@ -2,15 +2,57 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { OPENAI_API_KEY } from '$env/static/private';
-import { getModel, getPromptForModel } from '$lib/server/llm';
+import { getModel } from '$lib/server/llm';
+import { createClient } from '@supabase/supabase-js';
 
-export const POST: RequestHandler = async ({ request }) => {
-	const { prompt, history, modelId, customPrompt } = await request.json();
-	console.log('Received chat request:', { prompt, history, modelId, customPrompt });
+const supabaseUrl = process.env.VITE_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey =
+	process.env.VITE_SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-	const selectedModelId = modelId || 'gpt-3.5-turbo';
-	const model = getModel(selectedModelId);
-	const systemPrompt = customPrompt || getPromptForModel(selectedModelId);
+export const POST: RequestHandler = async ({ request, locals }) => {
+	const { prompt, history, modelId } = await request.json();
+	const user = locals.user;
+	console.log('API/chat received modelId:', modelId, 'user.id:', user?.id);
+	if (!user || !user.id) {
+		return json({ reply: 'Usuário não autenticado.' }, { status: 401 });
+	}
+
+	const trimmedModelId = (modelId || '').trim();
+	const trimmedUserId = (user.id || '').trim();
+	console.log(
+		'API/chat querying with modelId:',
+		trimmedModelId,
+		typeof trimmedModelId,
+		'userId:',
+		trimmedUserId,
+		typeof trimmedUserId
+	);
+
+	const selectedModelId = trimmedModelId || 'gpt-3.5-turbo';
+
+	// Try to fetch the model profile from Supabase
+	let systemPrompt = 'You are a helpful assistant.';
+	let model = getModel(selectedModelId) || { model: 'gpt-3.5-turbo' };
+
+	const { data: modelProfile, error } = await supabase
+		.from('models')
+		.select('*')
+		.eq('id', trimmedModelId)
+		.eq('user_id', trimmedUserId)
+		.maybeSingle();
+
+	console.log('Fetched modelProfile:', modelProfile);
+
+	if (error) {
+		console.error('Error fetching model profile from Supabase:', error);
+	}
+	if (modelProfile) {
+		systemPrompt = modelProfile.system_prompt || systemPrompt;
+		model = { ...model, ...modelProfile };
+	}
+
+	console.log('Using system prompt:', systemPrompt);
 
 	const messages = [
 		{ role: 'system', content: systemPrompt },

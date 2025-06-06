@@ -1,4 +1,5 @@
-import { writable } from 'svelte/store';
+import { writable, get } from 'svelte/store';
+import { supabase } from '$lib/supabaseClient';
 import { user } from './user';
 
 export type ApiKey = {
@@ -8,69 +9,60 @@ export type ApiKey = {
 	user_id: string;
 };
 
-let currentUserId = '';
-user.subscribe((u) => {
-	currentUserId = u?.id || '';
-});
-
-function storageKey() {
-	return currentUserId ? `bigstep-api-keys-${currentUserId}` : 'bigstep-api-keys-guest';
-}
-
-function loadKeys(): ApiKey[] {
-	if (typeof window !== 'undefined') {
-		try {
-			return JSON.parse(localStorage.getItem(storageKey()) || '[]');
-		} catch {
-			return [];
-		}
-	}
-	return [];
-}
-
-function saveKeys(keys: ApiKey[]) {
-	if (typeof window !== 'undefined') {
-		localStorage.setItem(storageKey(), JSON.stringify(keys));
-	}
-}
-
 function createApiKeysStore() {
-	const { subscribe, set, update } = writable<ApiKey[]>(loadKeys());
+	const { subscribe, set, update } = writable<ApiKey[]>([]);
 
-	function refresh() {
-		set(loadKeys());
+	async function fetchApiKeys() {
+		const currentUserId = get(user)?.id || '';
+		console.log('[apiKeys] fetchApiKeys for user_id:', currentUserId);
+		const { data, error } = await supabase
+			.from('api_keys')
+			.select('*')
+			.eq('user_id', currentUserId);
+		if (error) {
+			console.error('[apiKeys] Error fetching API keys:', error);
+			set([]);
+			return;
+		}
+		console.log('[apiKeys] API keys fetched:', data);
+		set(data || []);
 	}
 
-	function setUserId(newId: string) {
-		currentUserId = newId;
-		refresh();
+	async function addKey(key: Omit<ApiKey, 'id'>) {
+		console.log('[apiKeys] addKey called with:', key);
+		const { data, error } = await supabase.from('api_keys').insert([key]).select();
+		if (error) {
+			console.error('[apiKeys] Error adding API key:', error);
+			return;
+		}
+		console.log('[apiKeys] API key added:', data);
+		await fetchApiKeys();
+	}
+
+	async function updateKey(id: string, updated: Partial<ApiKey>) {
+		const { error } = await supabase.from('api_keys').update(updated).eq('id', id);
+		if (error) {
+			console.error('[apiKeys] Error updating API key:', error);
+			return;
+		}
+		await fetchApiKeys();
+	}
+
+	async function deleteKey(id: string) {
+		const { error } = await supabase.from('api_keys').delete().eq('id', id);
+		if (error) {
+			console.error('[apiKeys] Error deleting API key:', error);
+			return;
+		}
+		await fetchApiKeys();
 	}
 
 	return {
 		subscribe,
-		setUserId,
-		addKey: (key: ApiKey) => {
-			update((keys) => {
-				const newKeys = [key, ...keys];
-				saveKeys(newKeys);
-				return newKeys;
-			});
-		},
-		updateKey: (id: string, updated: Partial<ApiKey>) => {
-			update((keys) => {
-				const newKeys = keys.map((k) => (k.id === id ? { ...k, ...updated } : k));
-				saveKeys(newKeys);
-				return newKeys;
-			});
-		},
-		deleteKey: (id: string) => {
-			update((keys) => {
-				const newKeys = keys.filter((k) => k.id !== id);
-				saveKeys(newKeys);
-				return newKeys;
-			});
-		},
-		refresh
+		fetchApiKeys,
+		addKey,
+		updateKey,
+		deleteKey
 	};
 }
 
