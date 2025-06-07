@@ -39,7 +39,6 @@
 
 <script lang="ts">
 	import { cn } from '$lib/utils.js';
-
 	let {
 		class: className,
 		variant = 'default',
@@ -53,10 +52,10 @@
 
 {#if href}
 	<a class={cn(buttonVariants({ variant, size, className }))} {href} {...restProps}>
-		{@render children?.()}
+		{children?.()}
 	</a>
 {:else}
 	<button class={cn(buttonVariants({ variant, size, className }))} {type} {...restProps}>
-		{@render children?.()}
+		{children?.()}
 	</button>
 {/if}
