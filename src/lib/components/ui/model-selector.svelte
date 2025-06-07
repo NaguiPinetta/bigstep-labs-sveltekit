@@ -23,12 +23,15 @@
 	});
 
 	function selectModel(id: string) {
+		console.log('[ModelSelector] Model selected:', id);
 		localModelId = id;
 	}
 	function updatePrompt(e: Event) {
 		localPrompt = (e.target as HTMLTextAreaElement).value;
+		console.log('[ModelSelector] Prompt updated:', localPrompt);
 	}
 	function saveConfig() {
+		console.log('[ModelSelector] Saving config:', { localModelId, localPrompt });
 		selectedModelId.set(localModelId);
 		customPrompt.set(localPrompt);
 		if (typeof localStorage !== 'undefined') {

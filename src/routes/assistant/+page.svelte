@@ -74,6 +74,8 @@
 		];
 		isLoading = true;
 
+		console.log('[UI] Submitting chat:', { prompt: userMessage, modelId, systemPrompt });
+
 		try {
 			const response = await fetch('/api/chat', {
 				method: 'POST',
@@ -83,7 +85,8 @@
 				body: JSON.stringify({
 					prompt: userMessage,
 					history: messages,
-					modelId
+					modelId,
+					customPrompt: systemPrompt
 				})
 			});
 
@@ -116,9 +119,11 @@
 		const id = (e.target as HTMLSelectElement).value;
 		const model = modelProfiles.find((m) => m.id === id);
 		if (model) {
+			console.log('[UI] Model selected:', model.id, model.name, model.system_prompt);
 			selectedModelId.set(model.id);
 			modelId = model.id;
 			customPrompt.set(model.system_prompt);
+			console.log('[UI] Custom prompt set to:', model.system_prompt);
 		}
 	}
 
@@ -166,9 +171,9 @@
 
 <div class="flex min-h-0 flex-1 flex-col">
 	<!-- Chat header with model selector -->
-	<div class="mx-auto mb-2 w-full max-w-2xl">
+	<div class="mb-2 w-full">
 		<div
-			class="flex flex-col gap-2 rounded-t-md border-b border-border bg-card px-4 py-2 sm:flex-row sm:items-center sm:justify-between"
+			class="flex w-full flex-col gap-2 rounded-t-md border-b border-border bg-card px-4 py-2 sm:flex-row sm:items-center sm:justify-between"
 		>
 			<h2 class="text-left text-lg font-semibold">Chat</h2>
 			{#if modelProfiles.length > 0}

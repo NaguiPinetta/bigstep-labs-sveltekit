@@ -11,9 +11,16 @@ const supabaseAnonKey =
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export const POST: RequestHandler = async ({ request, locals }) => {
-	const { prompt, history, modelId } = await request.json();
+	const { prompt, history, modelId, customPrompt } = await request.json();
 	const user = locals.user;
-	console.log('API/chat received modelId:', modelId, 'user.id:', user?.id);
+	console.log(
+		'API/chat received modelId:',
+		modelId,
+		'user.id:',
+		user?.id,
+		'customPrompt:',
+		customPrompt
+	);
 	if (!user || !user.id) {
 		return json({ reply: 'Usuário não autenticado.' }, { status: 401 });
 	}
@@ -51,7 +58,10 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		systemPrompt = modelProfile.system_prompt || systemPrompt;
 		model = { ...model, ...modelProfile };
 	}
-
+	if (customPrompt) {
+		console.log('Overriding systemPrompt with customPrompt from UI:', customPrompt);
+		systemPrompt = customPrompt;
+	}
 	console.log('Using system prompt:', systemPrompt);
 
 	const messages = [

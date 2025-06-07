@@ -30,9 +30,10 @@
 	const unsubscribe = models.subscribe((val) => (modelList = val));
 
 	onMount(async () => {
-		models.fetchModels();
 		// Fetch real API keys for the current user
 		const currentUser = get(user);
+		console.log('[models] Current user:', currentUser);
+		console.log('[models] Initial modelList:', modelList);
 		if (!currentUser) return;
 		const { data, error } = await supabase
 			.from('api_keys')
@@ -50,6 +51,11 @@
 			label: `${k.provider} (${k.id.slice(0, 8)})`
 		}));
 	});
+
+	// Reactively fetch models when user becomes available
+	$: if (get(user)?.id) {
+		models.fetchModels();
+	}
 
 	function handleAdd() {
 		editModel = null;
@@ -195,31 +201,35 @@
 			</button>
 		</div>
 		<div>
-			{#if modelList.length === 0}
-				<div class="text-muted-foreground">No models saved.</div>
-			{:else}
-				<div class="overflow-x-auto">
-					<table class="w-full min-w-full border text-sm">
-						<thead>
-							<tr class="bg-muted">
-								<th class="px-3 py-2 text-left font-semibold">Name</th>
-								<th class="px-3 py-2 text-left font-semibold">Provider</th>
-								<th class="px-3 py-2 text-left font-semibold">Description</th>
-								<th class="px-3 py-2 text-left font-semibold">Prompt</th>
-								<th class="px-3 py-2 text-left font-semibold">Actions</th>
+			<div class="overflow-x-auto">
+				<table class="w-full min-w-full border text-sm">
+					<thead>
+						<tr class="bg-muted">
+							<th class="px-3 py-2 text-left font-semibold">Name</th>
+							<th class="px-3 py-2 text-left font-semibold">Provider</th>
+							<th class="px-3 py-2 text-left font-semibold">Description</th>
+							<th class="px-3 py-2 text-left font-semibold">Prompt</th>
+							<th class="px-3 py-2 text-left font-semibold">Actions</th>
+						</tr>
+					</thead>
+					<tbody>
+						{#if modelList.length === 0}
+							<tr>
+								<td colspan="5" class="px-3 py-2 text-center text-muted-foreground"
+									>No models saved.</td
+								>
 							</tr>
-						</thead>
-						<tbody>
+						{:else}
 							{#each modelList as model}
 								<tr class="border-b">
 									<td class="px-3 py-2 font-medium">{model.name}</td>
 									<td class="px-3 py-2">{model.provider}</td>
 									<td class="px-3 py-2">{model.description}</td>
-									<td class="px-3 py-2"
-										>{model.system_prompt.length > 32
+									<td class="px-3 py-2">
+										{model.system_prompt.length > 32
 											? model.system_prompt.slice(0, 32) + '...'
-											: model.system_prompt}</td
-									>
+											: model.system_prompt}
+									</td>
 									<td class="flex gap-2 px-3 py-2">
 										<button
 											class="rounded bg-muted px-2 py-1 text-xs"
@@ -236,10 +246,10 @@
 									</td>
 								</tr>
 							{/each}
-						</tbody>
-					</table>
-				</div>
-			{/if}
+						{/if}
+					</tbody>
+				</table>
+			</div>
 		</div>
 	</Card>
 	{#if $toast}
