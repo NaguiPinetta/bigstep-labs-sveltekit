@@ -21,7 +21,7 @@
 
 - Modern, responsive SvelteKit app using SHADCN UI components.
 - Sidebar navigation with:
-  - Assistant (Chat, History, Starred, Settings)
+  - Agent (Chat, History, Starred, Settings)
   - Documentation
   - Settings
   - Model Profiles
@@ -58,7 +58,7 @@
 - Sidebar overview
 - Main sections (Chat, History, Starred, Settings, Documentation, Model Profiles)
 
-## Chatting with the Assistant
+## Chatting with the Agent
 
 - Starting a new chat
 - Viewing chat history

@@ -38,50 +38,20 @@
 		navMain: [
 			{
 				title: 'Assistant',
-				url: '#',
+				url: '/assistant',
 				icon: Bot,
-				isActive: true,
-				items: [
-					{
-						title: 'Chat',
-						url: '/assistant'
-					},
-					{
-						title: 'History',
-						url: '/assistant/history'
-					},
-					{
-						title: 'Starred',
-						url: '/assistant/starred'
-					},
-					{
-						title: 'Settings',
-						url: '/assistant/settings'
-					}
-				]
+				isActive: false,
+				items: []
+			},
+			{
+				title: 'History',
+				url: '/assistant/history',
+				icon: Frame
 			},
 			{
 				title: 'Documentation',
 				url: '/documentation',
 				icon: BookOpen
-				// items: [
-				// 	{
-				// 		title: "Introduction",
-				// 		url: "#",
-				// 	},
-				// 	{
-				// 		title: "Get Started",
-				// 		url: "#",
-				// 	},
-				// 	{
-				// 		title: "Tutorials",
-				// 		url: "#",
-				// 	},
-				// 	{
-				// 		title: "Changelog",
-				// 		url: "#",
-				// 	},
-				// ],
 			},
 			{
 				title: 'Settings',
@@ -89,9 +59,29 @@
 				icon: Settings2
 			},
 			{
+				title: 'Agents',
+				url: '/agents',
+				icon: Command
+			},
+			{
 				title: 'Model Profiles',
 				url: '/models',
 				icon: SquareTerminal
+			},
+			{
+				title: 'Datasets',
+				url: '/datasets',
+				icon: ChartPie
+			},
+			{
+				title: 'Personas',
+				url: '/personas',
+				icon: Map
+			},
+			{
+				title: 'Workbench',
+				url: '/workbench',
+				icon: AudioWaveform
 			}
 		],
 		projects: [
