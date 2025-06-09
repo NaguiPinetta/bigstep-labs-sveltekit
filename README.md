@@ -1,38 +1,93 @@
-# sv
+# 🧠 BigStep Labs — AI Agent Platform
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+A modular full-stack platform to manage and run AI agents using **SvelteKit**, **Supabase**, and **SHADCN UI**.
 
-## Creating a project
+---
 
-If you're seeing this, you've probably already done this step. Congrats!
+## 🚀 Quickstart
 
-```bash
-# create a new project in the current directory
-npx sv create
+Clone the repo and get started locally:
 
-# create a new project in my-app
-npx sv create my-app
-```
-
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
-```bash
+````bash
+git clone https://github.com/your-org/bigstep-labs-sveltekit.git
+cd bigstep-labs-sveltekit
+npm install
 npm run dev
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
+Configure your .env file with your Supabase keys and providers (OpenAI, Gemini, etc.).
 
-## Building
+## 🧱 Tech Stack
 
-To create a production version of your app:
+| Layer         | Technology                                                 |
+|---------------|-------------------------------------------------------------|
+| Frontend      | SvelteKit + SHADCN UI                                      |
+| Backend       | Supabase (Postgres + Auth)                                 |
+| AI Providers  | OpenAI · Gemini · DeepSeek (via API key manager)           |
+| Auth          | Supabase Magic Link + Row Level Security (RLS)             |
+| State         | Svelte stores + Cursor `.cursorrules`                      |
 
-```bash
-npm run build
-```
+---
 
-You can preview the production build with `npm run preview`.
+## 📁 Folder Structure (Simplified)
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+src/
+├── lib/
+│ ├── components/ → UI, modals, shared SHADCN components
+│ ├── docs/ → AI-readable developer docs
+│ ├── server/ → Supabase/LLM integration logic
+│ └── stores/ → Global Svelte stores (models, user, etc.)
+├── routes/
+│ ├── agents/ → Agent creation + config UI
+│ ├── datasets/ → Upload & link corpora/glossaries
+│ ├── personas/ → Define personas & tone
+│ ├── workbench/ → Run structured tasks
+│ ├── documentation/ → Markdown docs via mdsvex
+│ └── release-notes/ → Changelog markdown and UI
+
+
+---
+
+## 🔧 Features
+
+- Create & manage agents (model + persona + dataset + tools)
+- Upload datasets (CSV, TMX, glossary)
+- Create personas (tone, use case, prompt)
+- Link datasets and tools to agents (e.g. glossary, TMX, RAG)
+- Fully responsive SHADCN UI
+- Workbench for task execution
+- Cursor AI integration with `.cursorrules` and `.md` documentation
+
+---
+
+## 📄 Indexed Docs
+
+These documents are registered with Cursor's **Indexing & Docs** system:
+
+- `src/lib/docs/architecture.md` — platform structure and logic
+- `src/routes/release-notes/rn-content.md` — changelog entries
+- `README.md` — this file
+
+---
+
+## 💬 Assistant System Logic
+
+- Chat using `/assistant/chat`
+- Agents apply: model profile, persona prompt, datasets
+- Supabase tables (planned): `chat_sessions`, `messages`
+- AI calls handled by `lib/server/llm.ts`
+
+---
+
+## 🔐 Supabase & Security
+
+- Magic Link auth
+- RLS enabled on all tables
+- Each record scoped with `user_id = auth.uid()`
+
+**Example RLS policy:**
+
+```sql
+CREATE POLICY "Users access only their data"
+ON models FOR SELECT
+USING (user_id = auth.uid());
+````
