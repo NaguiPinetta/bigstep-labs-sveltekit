@@ -10,6 +10,7 @@ export type ModelProfile = {
 	provider: string;
 	system_prompt: string;
 	user_id: string;
+	model: string;
 };
 
 function createModelsStore() {

@@ -69,6 +69,11 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		return json({ reply: 'Model profile not found.' }, { status: 404 });
 	}
 
+	if (!modelProfile.model) {
+		console.error('Model name is missing in model profile:', modelProfile);
+		return json({ reply: 'Model name is not set for this profile.' }, { status: 400 });
+	}
+
 	console.log('Fetched modelProfile:', modelProfile);
 	console.log('Provider:', modelProfile.provider);
 	console.log('Model name:', modelProfile.model);
