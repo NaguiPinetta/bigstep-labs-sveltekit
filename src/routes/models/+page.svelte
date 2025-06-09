@@ -57,6 +57,18 @@
 		models.fetchModels();
 	}
 
+	function openForm() {
+		editModel = null;
+		form = { name: '', description: '', api_key_id: '', provider: '', system_prompt: '' };
+		showForm = true;
+	}
+
+	function closeForm() {
+		showForm = false;
+		editModel = null;
+		formError = '';
+	}
+
 	function handleAdd() {
 		editModel = null;
 		form = { name: '', description: '', api_key_id: '', provider: '', system_prompt: '' };
@@ -129,73 +141,71 @@
 
 <div class="flex w-full flex-col gap-4 p-4 sm:p-6">
 	{#if showForm}
-		<Card class="mb-4 w-full p-4 sm:p-6">
-			<form
-				class="flex w-full flex-col items-start gap-4 text-left"
-				on:submit|preventDefault={handleFormSave}
-			>
-				<h3 class="mb-2 text-left text-lg font-semibold">
-					{editModel ? 'Edit Model' : 'Add Model'}
-				</h3>
-				<label class="block w-full text-left text-sm font-medium"
-					>Name
-					<Input type="text" bind:value={form.name} required class="mt-1 w-full" />
-				</label>
-				<label class="block w-full text-left text-sm font-medium"
-					>Description
-					<textarea
-						bind:value={form.description}
-						class="mt-1 min-h-[60px] w-full rounded border border-input bg-background p-2 text-sm"
-					/>
-				</label>
-				<label class="block w-full text-left text-sm font-medium"
-					>API Key / Provider
-					<select
-						bind:value={form.api_key_id}
-						required
-						class="mt-1 w-full rounded border border-input bg-background p-2 text-sm"
-					>
-						<option value="" disabled selected>Select an API Key</option>
-						{#each apiKeys as key}
-							<option value={key.id}>{key.label}</option>
-						{/each}
-					</select>
-				</label>
-				{#if apiKeyError}
-					<div class="text-xs text-red-600">{apiKeyError}</div>
-				{/if}
-				<label class="block w-full text-left text-sm font-medium"
-					>System Prompt
-					<textarea
-						bind:value={form.system_prompt}
-						required
-						class="mt-1 min-h-[80px] w-full rounded border border-input bg-background p-2 text-sm"
-					/>
-				</label>
-				{#if formError}
-					<div class="text-xs text-red-600">{formError}</div>
-				{/if}
-				<div class="mt-2 flex gap-2">
-					<button
-						type="submit"
-						class="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-						>Save</button
-					>
-					<button
-						type="button"
-						class="rounded bg-muted px-4 py-2 text-sm"
-						on:click={() => (showForm = false)}>Cancel</button
-					>
+		<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+			<div class="w-full max-w-md rounded-lg bg-card p-6 shadow-lg">
+				<div class="mb-4 flex items-center justify-between">
+					<h2 class="text-xl font-semibold">{editModel ? 'Edit Model' : 'Add Model'}</h2>
+					<button class="text-lg" on:click={closeForm}>&times;</button>
 				</div>
-			</form>
-		</Card>
+				<form class="flex flex-col gap-4 text-left" on:submit|preventDefault={handleFormSave}>
+					<label class="block text-sm font-medium"
+						>Name
+						<Input type="text" bind:value={form.name} required class="mt-1 w-full" />
+					</label>
+					<label class="block text-sm font-medium"
+						>Description
+						<textarea
+							bind:value={form.description}
+							class="mt-1 min-h-[60px] w-full rounded border border-input bg-background p-2 text-sm"
+						/>
+					</label>
+					<label class="block text-sm font-medium"
+						>API Key / Provider
+						<select
+							bind:value={form.api_key_id}
+							required
+							class="mt-1 w-full rounded border border-input bg-background p-2 text-sm"
+						>
+							<option value="" disabled selected>Select an API Key</option>
+							{#each apiKeys as key}
+								<option value={key.id}>{key.label}</option>
+							{/each}
+						</select>
+					</label>
+					{#if apiKeyError}
+						<div class="text-xs text-red-600">{apiKeyError}</div>
+					{/if}
+					<label class="block text-sm font-medium"
+						>System Prompt
+						<textarea
+							bind:value={form.system_prompt}
+							required
+							class="mt-1 min-h-[80px] w-full rounded border border-input bg-background p-2 text-sm"
+						/>
+					</label>
+					{#if formError}
+						<div class="text-xs text-red-600">{formError}</div>
+					{/if}
+					<div class="mt-2 flex gap-2">
+						<button
+							type="submit"
+							class="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+							>Save</button
+						>
+						<button type="button" class="rounded bg-muted px-4 py-2 text-sm" on:click={closeForm}
+							>Cancel</button
+						>
+					</div>
+				</form>
+			</div>
+		</div>
 	{/if}
 	<Card class="w-full p-4 sm:p-6">
 		<div class="mb-4 flex items-center justify-between">
 			<h2 class="text-lg font-semibold">Models</h2>
 			<button
 				class="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-				on:click={handleAdd}
+				on:click={openForm}
 			>
 				Add Model
 			</button>

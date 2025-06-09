@@ -1,0 +1,44 @@
+# ── Routing & Frontend ────────────────────────
+
+- Use SvelteKit file-based routing for all pages and modules.
+- Markdown-rendered pages (e.g., /documentation/, /release-notes/) must use `content.md` + `+page.svelte` with mdsvex.
+- Render documentation inside SHADCN <Card> components with <CardHeader> and <CardContent class="prose">.
+- All markdown must be converted with mdsvex, not injected via @html.
+
+# ── Data Layer ────────────────────────────────
+
+- Agents: `/data/agents/[id].json`
+- Model Profiles: `/data/model-profiles/[id].json`
+- Personas: `/data/personas/[id].json`
+- Datasets: `/data/datasets/[slug].json` + source file
+- All config files must include: id, name, description, and required parameters for that entity.
+- Load all agent data from JSON unless Supabase is explicitly enabled.
+
+# ── Supabase & Auth ───────────────────────────
+
+- Use Supabase Auth with magic link login.
+- All database tables must include `user_id` column.
+- Enable RLS and apply `user_id = auth.uid()` policy to every row.
+- Never expose service-level queries in frontend — use client-authenticated sessions only.
+
+# ── Chat / Assistant Module ───────────────────
+
+- Assistant must support full agent profiles:
+  - Model Profile → sets engine and key
+  - Persona → provides system prompt
+  - Datasets → enable RAG support
+- Messages must be stored in `/messages/` (or Supabase `messages` table).
+- Allow users to select and switch agents in-session.
+
+# ── Workbench Module ───────────────────────────
+
+- Provide a task-based interface for power users:
+  - Task types: Translate CSV, Summarize, Glossary QA, Rewrite
+  - Each task should show only when selected via dropdown
+  - Output must be previewable and downloadable
+
+# ── Release Notes ─────────────────────────────
+
+- Stored and rendered from `content.md` using `mdsvex`.
+- Always show in a SHADCN Card with version, description, and changelog.
+- All markdown content must use proper headers, lists, and inline formatting.

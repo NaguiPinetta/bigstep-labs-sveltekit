@@ -10,6 +10,7 @@
 	import Settings2 from 'lucide-svelte/icons/settings-2';
 	import SquareTerminal from 'lucide-svelte/icons/square-terminal';
 	import LogOut from 'lucide-svelte/icons/log-out';
+	import FileText from 'lucide-svelte/icons/file-text';
 
 	// This is sample data.
 	const data = {
@@ -49,11 +50,6 @@
 				icon: Frame
 			},
 			{
-				title: 'Documentation',
-				url: '/documentation',
-				icon: BookOpen
-			},
-			{
 				title: 'Settings',
 				url: '/settings',
 				icon: Settings2
@@ -82,6 +78,16 @@
 				title: 'Workbench',
 				url: '/workbench',
 				icon: AudioWaveform
+			},
+			{
+				title: 'Documentation',
+				url: '/documentation',
+				icon: BookOpen
+			},
+			{
+				title: 'Release Notes',
+				url: '/release-notes',
+				icon: FileText
 			}
 		],
 		projects: [

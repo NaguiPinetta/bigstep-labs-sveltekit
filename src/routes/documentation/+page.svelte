@@ -5,12 +5,12 @@
 	// @ts-ignore
 	import markdown from '$lib/docs/overview.md?raw';
 
-	const html: string = marked.parse(markdown);
+	const html: string = marked.parse(markdown) as string;
 </script>
 
 <div class="flex flex-col gap-4 p-6">
 	<Card class="p-6 text-left">
-		<div class="prose max-w-none text-left">{@html html}</div>
+		<div class="prose prose-sm max-w-none text-left">{@html html}</div>
 	</Card>
 </div>
 
