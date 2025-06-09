@@ -59,7 +59,14 @@
 
 	function openForm() {
 		editModel = null;
-		form = { name: '', description: '', api_key_id: '', provider: '', system_prompt: '' };
+		form = {
+			name: '',
+			description: '',
+			api_key_id: '',
+			provider: '',
+			system_prompt: '',
+			model: ''
+		};
 		showForm = true;
 	}
 
@@ -71,7 +78,14 @@
 
 	function handleAdd() {
 		editModel = null;
-		form = { name: '', description: '', api_key_id: '', provider: '', system_prompt: '' };
+		form = {
+			name: '',
+			description: '',
+			api_key_id: '',
+			provider: '',
+			system_prompt: '',
+			model: ''
+		};
 		showForm = true;
 	}
 
@@ -93,8 +107,8 @@
 
 	function handleFormSave() {
 		formError = '';
-		if (!form.name || !form.api_key_id || !form.system_prompt) {
-			formError = 'Name, API Key, and System Prompt are required.';
+		if (!form.name || !form.api_key_id || !form.system_prompt || !form.model) {
+			formError = 'Name, API Key, System Prompt, and Model Name are required.';
 			return;
 		}
 		const selectedKey = apiKeys.find((k) => k.id === form.api_key_id);
@@ -113,7 +127,8 @@
 			api_key_id: form.api_key_id,
 			provider: selectedKey.provider,
 			system_prompt: form.system_prompt,
-			user_id: currentUser.id
+			user_id: currentUser.id,
+			model: form.model
 		};
 		if (editModel) {
 			models.updateModel(editModel.id, model);
@@ -181,6 +196,16 @@
 							bind:value={form.system_prompt}
 							required
 							class="mt-1 min-h-[80px] w-full rounded border border-input bg-background p-2 text-sm"
+						/>
+					</label>
+					<label class="block text-sm font-medium"
+						>Model Name
+						<Input
+							type="text"
+							bind:value={form.model}
+							required
+							class="mt-1 w-full"
+							placeholder="e.g. gpt-3.5-turbo, gemini-pro"
 						/>
 					</label>
 					{#if formError}
