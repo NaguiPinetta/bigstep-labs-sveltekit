@@ -64,36 +64,56 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	}
 	console.log('Using system prompt:', systemPrompt);
 
-	const messages = [
-		{ role: 'system', content: systemPrompt },
-		...history.map((m: any) => ({
-			role: m.role,
-			content: m.content
-		})),
-		{ role: 'user', content: prompt }
-	];
-
-	const response = await fetch('https://api.openai.com/v1/chat/completions', {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json',
-			Authorization: `Bearer ${OPENAI_API_KEY}`
-		},
-		body: JSON.stringify({
-			model: model?.model || 'gpt-3.5-turbo',
-			messages
-		})
-	});
-
-	const raw = await response.text();
-	console.log('OpenAI response:', raw);
-
-	if (!response.ok) {
-		return json({ reply: 'Erro ao conectar ao modelo GPT.' }, { status: 500 });
+	if (!modelProfile) {
+		console.error('No model profile found for modelId:', trimmedModelId, 'userId:', trimmedUserId);
+		return json({ reply: 'Model profile not found.' }, { status: 404 });
 	}
 
-	const data = JSON.parse(raw);
-	const reply = data.choices?.[0]?.message?.content ?? 'Sem resposta do modelo.';
+	console.log('Fetched modelProfile:', modelProfile);
+	console.log('Provider:', modelProfile.provider);
+	console.log('Model name:', modelProfile.model);
+	console.log('API key (env, first 8 chars):', OPENAI_API_KEY?.slice(0, 8) + '...');
 
-	return json({ reply });
+	if (modelProfile.provider === 'openai') {
+		const messages = [
+			{ role: 'system', content: systemPrompt },
+			...history.map((m: any) => ({
+				role: m.role,
+				content: m.content
+			})),
+			{ role: 'user', content: prompt }
+		];
+
+		const payload = {
+			model: model?.model || 'gpt-3.5-turbo',
+			messages
+		};
+		console.log('Payload to OpenAI:', JSON.stringify(payload, null, 2));
+
+		const response = await fetch('https://api.openai.com/v1/chat/completions', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				Authorization: `Bearer ${OPENAI_API_KEY}`
+			},
+			body: JSON.stringify(payload)
+		});
+
+		const raw = await response.text();
+		console.log('OpenAI response status:', response.status);
+		console.log('OpenAI response body:', raw);
+
+		if (!response.ok) {
+			return json({ reply: 'Erro ao conectar ao modelo GPT.' }, { status: 500 });
+		}
+
+		const data = JSON.parse(raw);
+		const reply = data.choices?.[0]?.message?.content ?? 'Sem resposta do modelo.';
+
+		return json({ reply });
+	} else if (modelProfile.provider === 'gemini') {
+		return json({ reply: 'Gemini provider is not yet implemented.' }, { status: 501 });
+	} else {
+		return json({ reply: `Provider ${modelProfile.provider} is not supported.` }, { status: 400 });
+	}
 };
